@@ -57,7 +57,7 @@ module.exports = {
       res.status(500).json(err);
     }
   },
-  // Delete a user and remove their thoughts
+  // Delete a user and remove their thoughts and from all friends.
   async deleteUser(req, res) {
     try {
       const user = await User.findOneAndDelete({ _id: req.params.userId });
@@ -68,7 +68,12 @@ module.exports = {
 
       await Thought.deleteMany({ username: user.username });
 
-      res.json({ message: 'User and associated thoughts successfully deleted' });
+      await User.updateMany(
+        { friends: req.params.userId },
+        { $pull: { friends: req.params.userId } }
+      );
+
+      res.json({ message: 'User and associated thoughts successfully deleted and user removed from all friends lists' });
     } catch (err) {
       console.log(err);
       res.status(500).json(err);
